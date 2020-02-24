@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/editPlace"
+        android:title="Edit Place"
+        android:icon="@mipmap/ic_edit"
+        app:showAsAction="always"
+        ></item>
+    <item android:id="@+id/deletePlace"
+        android:title="Delete Place"
+        android:icon="@mipmap/ic_delete"
+        app:showAsAction="always"
+        ></item>
+</menu>
