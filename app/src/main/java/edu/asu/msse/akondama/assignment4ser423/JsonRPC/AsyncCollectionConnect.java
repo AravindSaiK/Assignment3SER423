@@ -3,6 +3,7 @@ package edu.asu.msse.akondama.assignment4ser423.JsonRPC;
 import android.os.AsyncTask;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
@@ -116,6 +117,8 @@ public class AsyncCollectionConnect extends AsyncTask<MethodInformation, Integer
                 JSONObject jo = new JSONObject(res.resultAsJson);
                 PlaceDescription place = new PlaceDescription(jo.getJSONObject("result").toString());
                 PlaceDescriptionActivity parent = (PlaceDescriptionActivity) res.parent;
+                String gcd = "0.00";
+                String ib = "0.00";
                 if(StringUtils.endsWithIgnoreCase(distance, "false")) {
                     parent.name.setText(place.getName());
                     parent.description.setText(place.getDescription());
@@ -126,16 +129,19 @@ public class AsyncCollectionConnect extends AsyncTask<MethodInformation, Integer
                     parent.latitude.setText(Double.toString(place.getLatitude()));
                     parent.longitude.setText(Double.toString(place.getLongitude()));
                     parent.image.setText(place.getImage());
+                    ArrayAdapter myAdap = (ArrayAdapter) parent.spinner.getAdapter();
+                    int position = myAdap.getPosition(place.getName());
+                    parent.spinner.setSelection(position);
                 }else{
                     Double lat1 = Double.parseDouble(res.params[2].toString());
                     Double lon1 = Double.parseDouble(res.params[3].toString());
                     Double lat2 = place.getLatitude();
                     Double lon2 = place.getLongitude();
-                    String gcd = greatCircleDistance(lat1, lon1, lat2, lon2);
-                    String ib = initialBearing(lat1, lon1, lat2, lon2);
-                    parent.initialBearing.setText(ib + " Degrees");
-                    parent.distance.setText(gcd + " KMs");
+                    gcd = greatCircleDistance(lat1, lon1, lat2, lon2);
+                    ib = initialBearing(lat1, lon1, lat2, lon2);
                 }
+                parent.initialBearing.setText(ib + " Degrees");
+                parent.distance.setText(gcd + " KMs");
             } else if (res.method.equals("remove")){
                 boolean flag = (boolean) res.params[1];
                 if(flag) {
@@ -143,6 +149,8 @@ public class AsyncCollectionConnect extends AsyncTask<MethodInformation, Integer
                 }
             }else if (res.method.equals("add")){
                 res.parent.finish();
+            }else{
+                Log.d("AsyncCollectionConnect", "Invalid selection.");
             }
         }catch (Exception ex){
             android.util.Log.d(this.getClass().getSimpleName(),"Exception: "+ex.getMessage());
