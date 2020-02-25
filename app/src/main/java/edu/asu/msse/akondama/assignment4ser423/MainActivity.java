@@ -11,13 +11,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.AsyncCollectionConnect;
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.MethodInformation;
 
 
 /*
@@ -36,23 +35,28 @@ import java.util.ArrayList;
  * imitations under the License.
  *
  * @author Aravinda Sai Kondamari mailto:akondama@asu.edu
- * @version Febrary 10, 2020
+ * @version Febrary 24, 2020
+ */
+
+/**
+ * Purpose: This is the UI that the app is initialized with.
+ * Displays a list of Places that can be selected to view their individual details in
+ * PlaceDescriptionActivity and also gives an option to add a place from EditPlaceActivity.
+ *
+ * Calls and loads data from JsonRPCServer asynchronously accessed from AsyncCollectionConnect.
  */
 public class MainActivity extends AppCompatActivity {
 
-    ListView placeList;
-    PlaceLibrary placeLibrary;
-    ArrayList<String> places;
-    ArrayAdapter listAdapter;
+    public ListView placeList;
+    public ArrayList<String> places;
+    public ArrayAdapter listAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         placeList = findViewById(R.id.placeList);
-        
-        String placeJson = getFileFromRaw("places");
-        placeLibrary = new PlaceLibrary(placeJson);
+        places = new ArrayList<>();
     }
 
     @Override
@@ -67,8 +71,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.addPlace) {
             Intent intent = new Intent(this, EditPlaceActivity.class);
-            intent.putExtra("placeLibrary", placeLibrary);
-            startActivityForResult(intent,1);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -76,52 +79,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        places = placeLibrary.getPlaceNames();
-
         listAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, places);
         placeList.setAdapter(listAdapter);
-
         placeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 sendToPlaceDescriptionActivity(position);
             }
         });
-        listAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if(data!= null) {
-                placeLibrary = (PlaceLibrary) data.getSerializableExtra("result");
-            }
-        }
-        Log.d("kkk", "2. " + placeLibrary.getPlaceNames().toString());
+        getNamesFromRPCServer();
+        Log.d("namesmain",this.toString());
     }
 
     private void sendToPlaceDescriptionActivity(int position) {
+        String selected = places.get(position);
+        Log.d("Selected: ", selected);
         Intent intent = new Intent(this, PlaceDescriptionActivity.class);
-        intent.putExtra("position", position);
-        intent.putExtra("placeLibrary", placeLibrary);
-        startActivityForResult(intent,1);
+        intent.putExtra("selected", selected);
+        intent.putExtra("places", places);
+        startActivity(intent);
     }
 
-    private String getFileFromRaw(String places) {
-        InputStream iStream = getResources().openRawResource(R.raw.places);
-        ByteArrayOutputStream byteStream = null;
-        try {
-            byte[] buffer = new byte[iStream.available()];
-            iStream.read(buffer);
-            byteStream = new ByteArrayOutputStream();
-            byteStream.write(buffer);
-            byteStream.close();
-            iStream.close();
-        } catch (IOException e) {
-            android.util.Log.w(this.getClass().getSimpleName(),
-                    "Error reading from file.");
-        }
-        return byteStream.toString();
+    private void getNamesFromRPCServer() {
+        MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"getNames",
+                new Object[]{});
+        AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
     }
 }

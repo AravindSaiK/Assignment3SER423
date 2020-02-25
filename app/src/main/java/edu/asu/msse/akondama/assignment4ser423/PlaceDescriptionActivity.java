@@ -18,6 +18,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.AsyncCollectionConnect;
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.MethodInformation;
+
 
 /*
  * Copyright 2020 Aravinda Sai Kondamari
@@ -35,24 +38,31 @@ import java.util.ArrayList;
  * imitations under the License.
  *
  * @author Aravinda Sai Kondamari mailto:akondama@asu.edu
- * @version Febrary 10, 2020
+ * @version Febrary 24, 2020
+ */
+
+/**
+ * Purpose: Displays individual Place Description selected from MainActivity.
+ * Provides delete and edit options. Edit options starts the EditPlaceActivity in edit mode.
+ *
+ * Makes changes to the data at JsonRPCServer asynchronously via AsyncCollectionConnect.
  */
 public class PlaceDescriptionActivity extends AppCompatActivity {
-    PlaceLibrary placeLibrary;
-    Integer position1, position2;
-    TextView name;
-    TextView category;
-    TextView description;
-    TextView addressTitle;
-    TextView addressStreet;
-    TextView elevation;
-    TextView latitude;
-    TextView longitude;
-    TextView distance;
-    TextView image;
-    TextView initialBearing;
-    Spinner spinner;
-    Button back;
+    String place1, place2;
+    public TextView name;
+    public TextView category;
+    public TextView description;
+    public TextView addressTitle;
+    public TextView addressStreet;
+    public TextView elevation;
+    public TextView latitude;
+    public TextView longitude;
+    public TextView distance;
+    public TextView image;
+    public TextView initialBearing;
+    public Spinner spinner;
+    public Button back;
+    public ArrayList<String> places;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,24 +83,16 @@ public class PlaceDescriptionActivity extends AppCompatActivity {
         back = findViewById(R.id.backButton);
 
         Intent intent = getIntent();
-        position1 = intent.getIntExtra("position", 0);
-        placeLibrary = (PlaceLibrary) intent.getSerializableExtra("placeLibrary");
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, placeLibrary.getPlaceNames());
+        place1 = intent.getStringExtra("selected");
+        places = intent.getStringArrayListExtra("places");
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, places);
         spinner.setAdapter(adapter);
-        PlaceDescription place = placeLibrary.getPlaces().get(position1);
-        name.setText(place.getName());
-        description.setText(place.getDescription());
-        category.setText(place.getCategory());
-        addressTitle.setText(place.getAddressTitle());
-        addressStreet.setText(place.getAddressStreet());
-        elevation.setText(Double.toString(place.getElevation()));
-        latitude.setText(Double.toString(place.getLatitude()));
-        longitude.setText(Double.toString(place.getLongitude()));
-        image.setText(place.getImage());
+
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                calculateDistance(position);
+                place2 = places.get(position);
+                calculateDistance(place2);
             }
 
             @Override
@@ -101,23 +103,25 @@ public class PlaceDescriptionActivity extends AppCompatActivity {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    Intent intent = new Intent();
-                    intent.putExtra("result", placeLibrary);
-                    setResult(RESULT_OK, intent);
                     finish();
             }
         });
     }
 
-    private void calculateDistance(int position) {
-        position2 = position;
-        PlaceDescription place1 = placeLibrary.getPlaces().get(position1);
-        PlaceDescription place2 = placeLibrary.getPlaces().get(position2);
-        String gcd = greatCircleDistance(place1.getLatitude(), place1.getLongitude(), place2.getLatitude(), place2.getLongitude());
-        String bearing = initialBearing(place1.getLatitude(), place1.getLongitude(), place2.getLatitude(), place2.getLongitude());
-        initialBearing.setText(bearing + " Degrees");
-        distance.setText(gcd + " KMs");
+    private void calculateDistance(String place2) {
+        MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"get",
+                new Object[]{place2, "true", latitude.getText(), longitude.getText()});
+        AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"get",
+                new Object[]{place1, "false"});
+        AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -128,78 +132,41 @@ public class PlaceDescriptionActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent();
-        intent.putExtra("result", placeLibrary);
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            placeLibrary = (PlaceLibrary) data.getSerializableExtra("result");
-            PlaceDescription place = placeLibrary.getPlaces().get(position1);
-            name.setText(place.getName());
-            description.setText(place.getDescription());
-            category.setText(place.getCategory());
-            addressTitle.setText(place.getAddressTitle());
-            addressStreet.setText(place.getAddressStreet());
-            elevation.setText(Double.toString(place.getElevation()));
-            latitude.setText(Double.toString(place.getLatitude()));
-            longitude.setText(Double.toString(place.getLongitude()));
-            image.setText(place.getImage());
-        }
+        super.onBackPressed();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.editPlace) {
+            String name1 = name.getText().toString();
+            String category1 = category.getText().toString();
+            String description1 = description.getText().toString();
+            String addressTitle1 = addressTitle.getText().toString();
+            String addressStreet1 = addressStreet.getText().toString();
+            String elevation1 = elevation.getText().toString();
+            String latitude1 = latitude.getText().toString();
+            String longitude1 = longitude.getText().toString();
+            PlaceDescription placeDescription = new PlaceDescription();
+            placeDescription.setName(name1);
+            placeDescription.setDescription(description1);
+            placeDescription.setCategory(category1);
+            placeDescription.setAddressTitle(addressTitle1);
+            placeDescription.setAddressStreet(addressStreet1);
+            placeDescription.setImage(name1);
+            placeDescription.setElevation(Double.parseDouble(elevation1));
+            placeDescription.setLatitude(Double.parseDouble(latitude1));
+            placeDescription.setLongitude(Double.parseDouble(longitude1));
             Intent intent = new Intent(this, EditPlaceActivity.class);
-            intent.putExtra("position", position1);
-            intent.putExtra("placeLibrary", placeLibrary);
+            intent.putExtra("placeDescription", placeDescription);
             intent.putExtra("flag", true);
-            startActivityForResult(intent,1);
+            startActivity(intent);
         }
         if (id == R.id.deletePlace) {
-            ArrayList<PlaceDescription> pla = placeLibrary.getPlaces();
-            pla.remove(position1.intValue());
-            placeLibrary.setPlaces(pla);
-            Log.d("kkk", "1. " + placeLibrary.getPlaceNames().toString());
-            Intent intent = new Intent();
-            intent.putExtra("result", placeLibrary);
-            setResult(RESULT_OK, intent);
-            finish();
+            MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"remove",
+                    new Object[]{place1, true});
+            AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    public String greatCircleDistance(double latitude1, double longitude1, double latitude2, double longitude2 ){
-
-        double R = 6371;
-        latitude1 = Math.toRadians(latitude1);
-        longitude1 = Math.toRadians(longitude1);
-
-        latitude2 = Math.toRadians(latitude2);
-        longitude2 = Math.toRadians(longitude2);
-
-        double x = (longitude2 - longitude1);
-        double y = (latitude2 - latitude1);
-        double c = Math.pow(Math.sin(y/2),2) + Math.cos(latitude1) * Math.cos(latitude2) * Math.pow(Math.sin(x/2),2);
-
-        double distance = 2 * Math.asin(Math.sqrt(c));
-        return (String.format("%.3f",distance*R));
-    }
-
-    public String initialBearing(double latitude1, double longitude1, double latitude2, double longitude2){
-
-        latitude1 = Math.toRadians(latitude1);
-        latitude2 = Math.toRadians(latitude2);
-        double longDiff= Math.toRadians(longitude2-longitude1);
-        double y= Math.sin(longDiff)*Math.cos(latitude2);
-        double x=Math.cos(latitude1)*Math.sin(latitude2)-Math.sin(latitude1)*Math.cos(latitude2)*Math.cos(longDiff);
-
-        return String.format("%.2f",(Math.toDegrees(Math.atan2(y, x))+360)%360);
     }
 }

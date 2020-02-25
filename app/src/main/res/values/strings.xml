@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Assignment3SER423</string>
+    <string name="app_name">Assignment4SER423</string>
+    <string name="defaultUrl">http://10.0.2.2:8080</string>
 </resources>

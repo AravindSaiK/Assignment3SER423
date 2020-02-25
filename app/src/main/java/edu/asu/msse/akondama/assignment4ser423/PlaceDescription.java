@@ -20,7 +20,11 @@ import java.io.Serializable;
  * imitations under the License.
  *
  * @author Aravinda Sai Kondamari mailto:akondama@asu.edu
- * @version Febrary 10, 2020
+ * @version Febrary 24, 2020
+ */
+
+/**
+ * Bean class for the PlaceDescription.
  */
 public class PlaceDescription implements Serializable {
 
@@ -125,5 +129,25 @@ public class PlaceDescription implements Serializable {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public JSONObject toJson() {
+        JSONObject jsonObject = new JSONObject();
+
+        try {
+            jsonObject.put("latitude", latitude);
+            jsonObject.put("longitude", longitude);
+            jsonObject.put("elevation", elevation);
+            jsonObject.put("name", this.name);
+            jsonObject.put("image", this.image);
+            jsonObject.put("address-title", this.addressTitle);
+            jsonObject.put("address-street", this.addressStreet);
+            jsonObject.put("description", this.description);
+            jsonObject.put("category", this.category);
+        } catch (Exception var3) {
+            System.out.println("Exception: " + var3.getMessage());
+        }
+
+        return jsonObject;
     }
 }
