@@ -1,6 +1,5 @@
-package edu.asu.msse.akondama.assignment3ser423;
+package edu.asu.msse.akondama.assignment4ser423;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +10,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.AsyncCollectionConnect;
+import edu.asu.msse.akondama.assignment4ser423.JsonRPC.MethodInformation;
 
 /*
  * Copyright 2020 Aravinda Sai Kondamari
@@ -28,14 +30,19 @@ import org.apache.commons.lang3.math.NumberUtils;
  * imitations under the License.
  *
  * @author Aravinda Sai Kondamari mailto:akondama@asu.edu
- * @version Febrary 10, 2020
+ * @version Febrary 24, 2020
+ */
+
+/**
+ * Purpose: This is the activity used to Add or edit a place in the list of places already available.
+ *
+ * This activity initializes in edit mode from the PlaceDescriptionActivity and
+ * in Add mode from MainActivity.
+ *
+ * Makes changes to the data at JsonRPCServer asynchronously via AsyncCollectionConnect.
  */
 
 public class EditPlaceActivity extends AppCompatActivity {
-
-    PlaceLibrary placeLibrary;
-    Integer position;
-
     EditText name;
     EditText category;
     EditText description;
@@ -54,7 +61,6 @@ public class EditPlaceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_place);
-        placeLibrary = (PlaceLibrary) getIntent().getSerializableExtra("placeLibrary");
         flag = getIntent().getBooleanExtra("flag", false);
         name = findViewById(R.id.nameEntry);
         category = findViewById(R.id.categoryEntry);
@@ -67,18 +73,17 @@ public class EditPlaceActivity extends AppCompatActivity {
         save = findViewById(R.id.saveButton);
 
         if(flag){
-            position = getIntent().getIntExtra("position", 0);
-            PlaceDescription place = placeLibrary.getPlaces().get(position);
-            name.setText(place.getName());
+            placeDescription = (PlaceDescription) getIntent().getSerializableExtra("placeDescription");
+            name.setText(placeDescription.getName());
             //name.setClickable(false);
             name.setEnabled(false);
-            category.setText(place.getCategory());
-            description.setText(place.getDescription());
-            addressTitle.setText(place.getAddressTitle());
-            addressStreet.setText(place.getAddressStreet());
-            elevation.setText(place.getElevation()+"");
-            latitude.setText(place.getLatitude()+"");
-            longitude.setText(place.getLongitude()+"");
+            category.setText(placeDescription.getCategory());
+            description.setText(placeDescription.getDescription());
+            addressTitle.setText(placeDescription.getAddressTitle());
+            addressStreet.setText(placeDescription.getAddressStreet());
+            elevation.setText(placeDescription.getElevation()+"");
+            latitude.setText(placeDescription.getLatitude()+"");
+            longitude.setText(placeDescription.getLongitude()+"");
         }
 
         save.setOnClickListener(new View.OnClickListener() {
@@ -87,9 +92,6 @@ public class EditPlaceActivity extends AppCompatActivity {
                 Boolean flag = performChecks();
                 if(flag){
                     saveDetails();
-                    Intent intent = new Intent();
-                    intent.putExtra("result", placeLibrary);
-                    setResult(RESULT_OK, intent);
                     finish();
                 }else{
                     Toast.makeText(EditPlaceActivity.this, "All Fields are Mandatory and last 3 fields only accepts Numbers.", Toast.LENGTH_SHORT).show();
@@ -103,10 +105,16 @@ public class EditPlaceActivity extends AppCompatActivity {
             Toast.makeText(EditPlaceActivity.this, "Please enter the details.", Toast.LENGTH_SHORT).show();
         }
         if(flag){
-            placeLibrary.getPlaces().add(position.intValue(), placeDescription);
-            placeLibrary.getPlaces().remove(position.intValue() + 1);
+            MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"remove",
+                    new Object[]{placeDescription.getName(), false});
+            AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
+            mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"add",
+                    new Object[]{placeDescription.toJson()});
+            ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
         }else {
-            placeLibrary.getPlaces().add(placeDescription);
+            MethodInformation mi = new MethodInformation(this, this.getString(R.string.defaultUrl),"add",
+                    new Object[]{placeDescription.toJson()});
+            AsyncCollectionConnect ac = (AsyncCollectionConnect) new AsyncCollectionConnect().execute(mi);
         }
     }
 

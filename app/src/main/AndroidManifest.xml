@@ -17,18 +17,20 @@ imitations under the License.
 @version February 10, 2020
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.asu.msse.akondama.assignment3ser423">
+    package="edu.asu.msse.akondama.assignment4ser423">
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Place Descriptions"
+        android:usesCleartextTraffic="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".EditPlaceActivity"></activity>
-        <activity android:name=".PlaceDescriptionActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name="edu.asu.msse.akondama.assignment4ser423.EditPlaceActivity"></activity>
+        <activity android:name="edu.asu.msse.akondama.assignment4ser423.PlaceDescriptionActivity" />
+        <activity android:name="edu.asu.msse.akondama.assignment4ser423.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
